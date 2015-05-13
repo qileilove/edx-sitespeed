@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+
+import argparse
 import json
 
 import requests
 
 
-def login(email, password, base_url='https://courses.edx.org'):
+def login(email, password, base_url):
     """Login via HTTP and parse sessionid from cookie."""
     r = requests.get('{}/login'.format(base_url))
     csrf = r.cookies['csrftoken']
@@ -30,11 +33,17 @@ def create_headers_file(session_key, session_id):
 
 
 if __name__ == '__main__':
-    email = 'user@example.com'
-    password = 'secret'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('email', help='edx username')
+    parser.add_argument('password', help='edx password')
+    parser.add_argument('base_url', nargs='?',
+                        default='https://courses.edx.org',
+                        help='base URL (e.g. https://courses.edx.org)')
+    args = parser.parse_args()
 
-    session_key, session_id = login(email, password)
+    session_key, session_id = login(args.email, args.password, args.base_url)
     create_headers_file(session_key, session_id)
+
     print 'Cookie has been set in cookie.json:'
     print '{}={}\n'.format(session_key, session_id)
     print 'Please invoke sitespeed.io with `--requestHeaders cookie.json` parameter.'
