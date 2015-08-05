@@ -7,7 +7,29 @@ import requests
 
 
 def login(email, password, base_url, auth_user=None, auth_pass=None):
-    """Login via HTTP and parse sessionid from cookie."""
+    """
+    Log in to the edX application via HTTP and parse sessionid from cookie.
+
+    Args:
+        email: Email address of edX user
+        password: Password for the edX user
+        base_url: Base url of the edX application
+        auth_user (Optional): Basic auth username for accessing the edX application
+        auth_pass (Optional): Basic auth password for accessing the edX application
+
+    Returns:
+        A dictionary with the data needed to create a headers file for sitespeed.io,
+            that will access the edX application as a logged-in user.
+            {
+                'session_key': name of the session key cookie,
+                'session_id': the sessionid on the edx platform
+                'csrf_token': the csrf token
+            }
+
+    Raises:
+        RuntimeError: If the login page is not accessible or the login fails.
+
+    """
     if (auth_user and auth_pass):
         auth = (auth_user, auth_pass)
     else:
@@ -33,11 +55,13 @@ def login(email, password, base_url, auth_user=None, auth_pass=None):
     except KeyError:
         session_key = 'sessionid'
         session_id = r.cookies[session_key]  # sandbox
-    return session_key, session_id
+    return {'session_key' : session_key, 'session_id' : session_id, 'csrf_token' : csrf}
 
 
-def create_headers_file(session_key, session_id):
-    headers = {'Cookie': '{}={}'.format(session_key, session_id)}
+def create_headers_file(session_key, session_id, csrf_token):
+    headers = {'Cookie': 'edxloggedin=true; {}={}; csrftoken={}'.format(
+        session_key, session_id, csrf_token), 'X-CSRFToken':'{}'.format(
+        csrf_token)}
     with open('cookie.json', 'w') as f:
         json.dump(headers, f)
 
@@ -52,10 +76,9 @@ if __name__ == '__main__':
     parser.add_argument('--auth_pass', help='basic auth password', default=None)
     args = parser.parse_args()
 
-    session_key, session_id = login(
+    session_info = login(
         args.email, args.password, args.base_url, auth_user=args.auth_user, auth_pass=args.auth_pass)
-    create_headers_file(session_key, session_id)
+    create_headers_file(session_info['session_key'], session_info['session_id'], session_info['csrf_token'])
 
-    print 'Cookie has been set in cookie.json:'
-    print '{}={}\n'.format(session_key, session_id)
+    print 'Cookie has been set in cookie.json.'
     print 'Please invoke sitespeed.io with `--requestHeaders cookie.json` parameter.'
