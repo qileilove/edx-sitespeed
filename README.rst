@@ -17,19 +17,19 @@ To run sitespeed.io against edX, you must have an authenticated (logged in) user
 Sitespeed.io allows you to pass in HTTP headers using .json in a file.
 We use this to pass a valid cookie that can be used in the browser during sitespeed.io's crawl.
 
-The ``edx-sitespeed.py`` script takes care of getting a valid cookie and writing it to file in .json format.
+The ``edx_sitespeed.py`` script takes care of getting a valid cookie and writing it to file in .json format.
 
 ----
 
 Usage:
 ------
 
-``edx-sitespeed.py [-h] -e EMAIL -p PASSWORD [-b BASE_URL] [--auth_user AUTH_USER] [--auth_pass AUTH_PASS]``
+``edx_sitespeed.py [-h] -e EMAIL -p PASSWORD -u URL [--auth_user AUTH_USER] [--auth_pass AUTH_PASS]``
 
 Example:
 --------
 
-``$ python edx-sitespeed.py -e honor@example.com -p edx -b http://my.sandbox.edx.org``
+``$ python edx_sitespeed.py -e honor@example.com -p edx -u http://my.sandbox.edx.org``
 
 This will create a ``cookie.json`` file.
 At this point, you are ready to invoke sitespeed.io, using the ``--requestHeaders cookie.json`` parameter.
