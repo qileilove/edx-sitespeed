@@ -37,29 +37,31 @@ def login(email, password, url, auth_user=None, auth_pass=None):
         auth = None
 
     base_url = get_base_url(url)
-    r = requests.get('{}/login'.format(base_url), auth=auth)
-    if r.status_code != 200:
+    resp = requests.get('{}/login'.format(base_url), auth=auth)
+    if resp.status_code != 200:
         msg = 'Failed accessing the login URL. Return code: {}'.format(
-            r.status_code)
+            resp.status_code)
         raise RuntimeError(msg)
 
-    csrf = r.cookies['csrftoken']
+    csrf = resp.cookies['csrftoken']
     data = {'email': email, 'password': password}
     cookies = {'csrftoken': csrf}
     headers = {'referer': '{}/login'.format(base_url), 'X-CSRFToken': csrf}
 
-    r = requests.post('{}/user_api/v1/account/login_session/'.format(base_url),
-                      data=data, cookies=cookies, headers=headers, auth=auth)
+    resp = requests.post(
+        '{}/user_api/v1/account/login_session/'.format(base_url),
+        data=data, cookies=cookies, headers=headers, auth=auth
+    )
 
-    if r.status_code != 200:
-        msg = 'Failed logging in. Return code: {}'.format(r.status_code)
+    if resp.status_code != 200:
+        msg = 'Failed logging in. Return code: {}'.format(resp.status_code)
         raise RuntimeError(msg)
     try:
         session_key = 'prod-edx-sessionid'
-        session_id = r.cookies[session_key]  # production
+        session_id = resp.cookies[session_key]  # production
     except KeyError:
         session_key = 'sessionid'
-        session_id = r.cookies[session_key]  # sandbox
+        session_id = resp.cookies[session_key]  # sandbox
     return {'session_key': session_key, 'session_id': session_id,
             'csrf_token': csrf}
 
